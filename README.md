@@ -4,7 +4,7 @@
 ![架构图](http://7xread.com1.z0.glb.clouddn.com/6e2ad677-7d73-4ff1-92f4-b6eebd95ad9a)
 
 ## server 
-  1. 负责维护和管理client连接。[远程通信](https://github.com/liuzm/distribute-clawler/tree/master/distribute-remoting/readme.md)
+  1. 负责维护和管理client连接。[远程通信](https://github.com/liuzm/distribute-clawler/blob/master/distribute-remoting/READM.md)
   2. 提供统计和发放任务。
   
 ## client
