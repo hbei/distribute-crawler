@@ -1,0 +1,36 @@
+<configuration scan="true" scanPeriod="600 seconds">
+	<appender name="ROLLING"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<prudent>true</prudent>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>
+				./logs/gc-log-%d{yyyy-MM-dd}.%i.log
+			</fileNamePattern>
+			<minIndex>1</minIndex>
+			<maxIndex>3</maxIndex>
+			<maxHistory>10</maxHistory>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>50MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%date %level [%thread] %logger.%class{0}#%method
+				[%file:%line] %msg%n</pattern>
+		</encoder>
+	</appender>
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%date %level [%thread] %logger.%class{0}#%method
+				[%file:%line] %msg%n</pattern>
+		</encoder>
+	</appender>
+	<logger name="io.github.liuzm" level="info">
+		<appender-ref ref="ROLLING" />
+		<appender-ref ref="STDOUT" />
+	</logger>
+	<root level="INFO">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="ROLLING" />
+	</root>
+</configuration>

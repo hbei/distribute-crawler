@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<job name="oschina" indexName="news">
+	<jobtime>-1</jobtime>
+	<urlNum>-1</urlNum>
+	<!-- 定义 Fetcher -->
+	<fetch>
+		<!-- 默认为Default，如果有其他实现，填写类的全路径 -->
+		<type>default</type>
+		<agent>Kindle</agent>
+		<!-- 爬取线程数 -->
+		<threadNum>10</threadNum>
+		<!-- 同一线程两次请求之间的间隔 -->
+		<delayBetweenRequests>200</delayBetweenRequests>
+		<!-- Url爬取深度 -1表示不限深度 -->
+		<maxDepthOfCrawling>-1</maxDepthOfCrawling>
+		
+		<maxOutgoingLinksToFollow>1000</maxOutgoingLinksToFollow>
+		<!-- 是否下载二进制数据 -->
+		<fetchBinaryContent>false</fetchBinaryContent>
+		<!-- 下载文件的后缀 -->
+		<fileSuffix>gif,jpg,png,zip,rar,aiv,mtk</fileSuffix>
+		<maxDownloadSizePerPage>1048576</maxDownloadSizePerPage>
+		<!-- 是否支持https -->
+		<https>true</https>
+		<!-- 是否仅爬取当前域名 -->
+		<onlyDomain>true</onlyDomain>
+		<connection>
+			<!-- http链接超时时间 -->
+			<socketTimeoutMilliseconds>20000</socketTimeoutMilliseconds>
+			<!-- 从http链接池中获取到可用链接的超时时间 -->
+			<connectionTimeout>0</connectionTimeout>
+			<maxTotalConnections>600</maxTotalConnections>
+			<maxConnectionsPerHost>600</maxConnectionsPerHost>
+		</connection>
+		<!-- 代理设置 -->
+		
+		<!-- url种子 -->
+		<seeds>
+			<seed area="北京">http://www.oschina.net/</seed>
+		</seeds>
+		<!-- 加入Url待处理队列的策略 -->
+		<fetchUrlFilters>
+			<!-- 种子需要加入过滤策略 -->
+			<filter>http://.*.oschina.net/news/.*</filter>
+			<filter>http://.*.oschina.net/news/list?show=industry</filter>
+			<filter>http://.*.oschina.net/news/list?show=industry&p=.*</filter>
+		</fetchUrlFilters>
+		<!-- 加入待抽取信息页队列的策略 -->
+		<extractUrlfilters>
+			<filter>http://.*.oschina.net/news/.*</filter>
+		</extractUrlfilters>
+	</fetch>
+
+	<!-- 定义extract -->
+	<extract> 
+		<type>default</type>
+		<threadNum>15</threadNum>
+		<template name="news">
+			<!-- 模板对应的Url规则 -->
+			<urls>
+				<url>http://.*.oschina.net/news/.*</url>
+			</urls>
+			<elements>
+				<element name="title" type="string" value=".OSCTitle" attr="text" required="true" />
+				<element name="time" type="string" value=".PubDate a" attr="text" required="true"/>
+				<element name="content" type="string" value=".TextContent p" attr="text" required="true"/>
+				
+		</template>
+	</extract>
+	<!-- 存储配置 -->
+	<store>
+		<type>local</type>
+		<dir>D:\\file</dir>
+		<threadNum>2</threadNum>
+		<idPolicy>md5</idPolicy>
+		<ref>title</ref>
+	</store>
+</job>

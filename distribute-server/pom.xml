@@ -1,0 +1,108 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>io.github.liuzm</groupId>
+		<artifactId>distribute-clawler</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>distribute-server</artifactId>
+	<name>distribute-server</name>
+	<description>distribute-server</description>
+	
+	<properties>
+		<maven.compiler.source>1.7</maven.compiler.source>
+		<maven.compiler.target>1.7</maven.compiler.target>
+		<maven.compiler.compilerVersion>1.7</maven.compiler.compilerVersion>
+
+		<netty.version>4.0.33.Final</netty.version>
+		<zookeeper.version>3.4.6</zookeeper.version>
+		<logback.version>1.1.2</logback.version>
+		<jackson.version>2.2.3</jackson.version>
+		<dubbo.version>2.5.3</dubbo.version>
+		<zkclient.version>0.6</zkclient.version>
+		<spring.version>4.1.2.RELEASE</spring.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<artifactId>distribute-common</artifactId>
+			<groupId>io.github.liuzm</groupId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<artifactId>distribute-remoting</artifactId>
+			<groupId>io.github.liuzm</groupId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<artifactId>distribute-server-api</artifactId>
+			<groupId>io.github.liuzm</groupId>
+			<version>${project.version}</version>
+		</dependency>
+		
+		<!-- dubbo start -->
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>dubbo</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring</artifactId>
+				</exclusion>
+			</exclusions>
+			<version>${dubbo.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.101tec</groupId>
+			<artifactId>zkclient</artifactId>
+			<version>${zkclient.version}</version>
+		</dependency>
+		<!-- dubbo end -->
+		<!-- spring start -->
+		<dependency>
+			<groupId>asm</groupId>
+			<artifactId>asm</artifactId>
+			<version>3.3.1</version>
+		</dependency>
+		<dependency>
+			<groupId> org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
+			<version>1.7.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-beans</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context-support</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-aop</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-orm</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+	</dependencies>
+</project>

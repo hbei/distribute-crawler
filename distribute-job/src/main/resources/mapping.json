@@ -1,0 +1,62 @@
+{
+  "video": {
+    "_all": {
+      "enabled": true
+    },
+    "index_analyzer": "ik",
+    "search_analyzer": "ik",
+    "_timestamp": {
+      "enabled": true,
+      "format": "YYYY-MM-dd"
+    },
+    "dynamic_templates": [
+      {
+        "string_template": {
+          "match": "*",
+          "mapping": {
+            "type": "string",
+            "index": "not_analyzed"
+          },
+          "match_mapping_type": "string"
+        }
+      }
+    ],
+    "properties": {
+      "title": {
+        "type": "string",
+        "include_in_all": true,
+        "index": "analyzed"
+      },
+      "year": {
+        "type": "date",
+        "include_in_all": true,
+        "index": "not_analyzed"
+      },
+      "actors": {
+        "type": "string",
+        "include_in_all": true,
+        "index": "analyzed"
+      },
+      "director": {
+        "type": "string",
+        "include_in_all": true,
+        "index": "analyzed"
+      },
+      "summary": {
+        "type": "string",
+        "include_in_all": false,
+        "index": "analyzed"
+      },
+      "type": {
+        "type": "string",
+        "include_in_all": true,
+        "index": "not_analyzed"
+      },
+      "category": {
+        "type": "string",
+        "include_in_all": true,
+        "index": "not_analyzed"
+      }
+    }
+  }
+}
