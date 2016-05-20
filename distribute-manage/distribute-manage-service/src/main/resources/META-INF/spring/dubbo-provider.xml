@@ -36,4 +36,5 @@
 	<bean id="clientsService" class="io.github.liuzm.manage.web.service.impl.ClientsServiceImpl" />
 	<dubbo:service interface="io.github.liuzm.manage.api.ClientService" ref="clientsService"/>
 	
+	<dubbo:monitor protocol="registry"></dubbo:monitor>
 </beans>

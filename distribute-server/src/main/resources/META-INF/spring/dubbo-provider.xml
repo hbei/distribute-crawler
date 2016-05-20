@@ -35,4 +35,5 @@
 	<bean id="aqService" class="io.github.liuzm.distribute.server.AQServerImpl"  factory-method="buildServer"/>
 	<dubbo:service interface="io.github.liuzm.distribute.server.api.AQServer" ref="aqService"/>
 	
+	<dubbo:monitor protocol="registry"></dubbo:monitor>
 </beans>
