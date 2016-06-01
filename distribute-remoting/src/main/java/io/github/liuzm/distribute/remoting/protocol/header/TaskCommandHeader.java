@@ -6,15 +6,18 @@ package io.github.liuzm.distribute.remoting.protocol.header;
 import java.util.List;
 
 import io.github.liuzm.distribute.remoting.exception.RemotingCommandException;
+import io.github.liuzm.distribute.remoting.protocol.CommandHeader;
 
 /**
  * @author xh-liuzhimin
  *
  */
-public class TaskCommandHeader extends AbstractCommandHeader {
+public class TaskCommandHeader implements CommandHeader {
+	
+	private String nodeId;
 	
 	public TaskCommandHeader(String nodeId) {
-		super(nodeId);
+		this.nodeId = nodeId;
 	}
 
 	private String taskId;
@@ -52,6 +55,20 @@ public class TaskCommandHeader extends AbstractCommandHeader {
 	 */
 	public void setTask(List<Object> task) {
 		this.task = task;
+	}
+
+	/**
+	 * @return the nodeId
+	 */
+	public String getNodeId() {
+		return nodeId;
+	}
+
+	/**
+	 * @param nodeId the nodeId to set
+	 */
+	public void setNodeId(String nodeId) {
+		this.nodeId = nodeId;
 	}
 	
 }

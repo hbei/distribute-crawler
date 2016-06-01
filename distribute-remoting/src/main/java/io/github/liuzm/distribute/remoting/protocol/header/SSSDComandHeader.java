@@ -4,15 +4,18 @@
 package io.github.liuzm.distribute.remoting.protocol.header;
 
 import io.github.liuzm.distribute.remoting.exception.RemotingCommandException;
+import io.github.liuzm.distribute.remoting.protocol.CommandHeader;
 
 /**
  * @author xh-liuzhimin
  *
  */
-public class SSSDComandHeader extends AbstractCommandHeader {
+public class SSSDComandHeader implements CommandHeader {
+	
+	private String nodeId;
 	
 	public SSSDComandHeader(String nodeId) {
-		super(nodeId);
+		this.nodeId = nodeId;
 	}
 
 	/**
@@ -23,6 +26,20 @@ public class SSSDComandHeader extends AbstractCommandHeader {
 	@Override
 	public void checkFields() throws RemotingCommandException {
 
+	}
+
+	/**
+	 * @return the nodeId
+	 */
+	public String getNodeId() {
+		return nodeId;
+	}
+
+	/**
+	 * @param nodeId the nodeId to set
+	 */
+	public void setNodeId(String nodeId) {
+		this.nodeId = nodeId;
 	}
 
 	/**
