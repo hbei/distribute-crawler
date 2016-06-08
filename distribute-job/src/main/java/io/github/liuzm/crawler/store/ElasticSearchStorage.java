@@ -13,7 +13,6 @@ import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -86,8 +85,9 @@ public class ElasticSearchStorage extends Storage {
 				return res;
 			}
 			
-			Map<String, Object> content = (Map<String, Object>)page.getMessages().get("goodsinfo");
-			log.info(client.toString());
+			Map<String, Object> content = (Map<String, Object>)page.getMessages().get(config.getElasticsearchConfig().getIndexType());
+			
+			
 			GetResponse get = client.prepareGet(config.getIndexName(), config.getElasticsearchConfig().getIndexType(), config.genId(content)).execute()
 					.actionGet();
 

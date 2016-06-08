@@ -232,6 +232,7 @@ public abstract class FetchWorker extends Worker {
 					// 提取Url，放入待抓取Url队列
 					Document doc = Jsoup.parse(new String(page.getContentData(), page.getContentCharset()),
 							urlUtils.getBaseUrl(page.getWebURL().getUrl()));
+					
 					Elements links = doc.getElementsByTag("a");
 					if (!links.isEmpty()) {
 						for (Element link : links) {
