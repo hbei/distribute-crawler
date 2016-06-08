@@ -86,6 +86,11 @@
 			<artifactId>htmlunit</artifactId>
 			<version>2.13</version>
 		</dependency>
+		<dependency>
+			<groupId>org.redisson</groupId>
+			<artifactId>redisson</artifactId>
+			<version>2.2.14</version>
+		</dependency>
 	</dependencies>
 
 	<build>
