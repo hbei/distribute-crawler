@@ -164,6 +164,7 @@ public abstract class FetchWorker extends Worker {
 	 * @return
 	 */
 	public String extractFilterAndChangeUrl(String url) {
+		
 		// 如果extractFilters为空，说明该条件不设立过滤，所以的url都通过
 		if (null == extractFilters || extractFilters.size() == 0) {
 			return url;

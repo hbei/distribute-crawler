@@ -141,8 +141,8 @@ public class BootStrap implements Job{
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static void main(String args[]) throws Exception {
 		try {
-			String taskfile = "oschina.xml";
-			File f = new File("D:\\GIT\\crawler\\distribute-clawler\\distribute-job\\src\\main\\resources\\"+taskfile);
+			String taskfile = args[0];
+			File f = new File(taskfile);
 			List list = Lists.newArrayList();
 			list.add(Jsoup.parse(f, "utf-8"));
 			start(list);

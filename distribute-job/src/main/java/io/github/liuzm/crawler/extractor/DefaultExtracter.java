@@ -31,7 +31,7 @@ public class DefaultExtracter implements Extracter<ExtractedPage> {
 			return null;
 		Document doc = null;
 		try {
-			doc = Jsoup.parse(new String(page.getContentData(), "utf-8"));
+			doc = Jsoup.parse(new String(page.getContentData(), "gbk"));
 		} catch (UnsupportedEncodingException e1) {
 			e1.printStackTrace();
 		}

@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -55,18 +56,20 @@ public class ElasticSearchStorage extends Storage {
 
 	@Override
 	public StoreResult beforeStore() {
-		try {
-			client = TransportClient.builder().settings(settings()).build();
-			for (String clusterNode : clusterNodes.split(COMMA)) {
-				String hostName = clusterNode.split(COLON)[0];
-				String port = clusterNode.split(COLON)[1];
-				log.info("adding transport node : " + clusterNode);
-				client.addTransportAddress(
-						new InetSocketTransportAddress(InetAddress.getByName(hostName), Integer.valueOf(port)));
+		if(client == null){
+			try {
+				client = TransportClient.builder().settings(settings()).build();
+				for (String clusterNode : clusterNodes.split(COMMA)) {
+					String hostName = clusterNode.split(COLON)[0];
+					String port = clusterNode.split(COLON)[1];
+					log.info("adding transport node : " + clusterNode);
+					client.addTransportAddress(
+							new InetSocketTransportAddress(InetAddress.getByName(hostName), Integer.valueOf(port)));
+				}
+				client.connectedNodes();
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
 			}
-			client.connectedNodes();
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
 		}
 
 		return null;
@@ -83,8 +86,8 @@ public class ElasticSearchStorage extends Storage {
 				return res;
 			}
 			
-			Map<String, Object> content = (Map<String, Object>)page.getMessages().get("youku");
-			log.info(content.toString());
+			Map<String, Object> content = (Map<String, Object>)page.getMessages().get("goodsinfo");
+			log.info(client.toString());
 			GetResponse get = client.prepareGet(config.getIndexName(), config.getElasticsearchConfig().getIndexType(), config.genId(content)).execute()
 					.actionGet();
 
@@ -98,7 +101,7 @@ public class ElasticSearchStorage extends Storage {
 			return res;
 
 		} catch (Exception e) {
-
+			e.printStackTrace();
 		}
 		return null;
 	}
@@ -232,5 +235,5 @@ public class ElasticSearchStorage extends Storage {
 	public void setClientNodesSamplerInterval(String clientNodesSamplerInterval) {
 		this.clientNodesSamplerInterval = clientNodesSamplerInterval;
 	}
-
+	
 }
