@@ -155,7 +155,6 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 	    }
 	}
 	
-	@SuppressWarnings("static-access")
 	class NettyConnetManageHandler extends ChannelDuplexHandler {
 		
 		@Override
@@ -223,7 +222,6 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 		this.processorTable.put(requestCode, pair);
 	}
 	
-	@SuppressWarnings("static-access")
 	@Override
 	public Command invokeSync(String nodeId, Command request, long timeoutMillis) throws InterruptedException,
 			RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException {
@@ -237,7 +235,6 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 	/**
 	 * 异步应答
 	 */
-	@SuppressWarnings("static-access")
 	@Override
 	public void invokeAsync(String nodeId, Command request, long timeoutMillis, InvokeCallback invokeCallback)
 			throws InterruptedException, RemotingConnectException, RemotingTooMuchRequestException,
@@ -246,14 +243,12 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 		this.invokeAsyncImpl(channel, request, timeoutMillis, invokeCallback);
 	}
 	
-	@SuppressWarnings("static-access")
 	public void closeChannel(final Channel channel) {
         if (null == channel)
             return;
         ChannelManager.disConnect(this.node.getId());
     }
 	
-	@SuppressWarnings("static-access")
 	@Override
 	public boolean isChannelWriteable(String addr) {
 		if(ChannelManager.get(addr) != null){

@@ -1,14 +1,14 @@
 # 1. 架构思路
 
 ## 架构图
-![架构图](http://7xread.com1.z0.glb.clouddn.com/6e2ad677-7d73-4ff1-92f4-b6eebd95ad9a)
+![架构图](http://7xjt9m.com1.z0.glb.clouddn.com/1.png)
 
 ## server 
   1. 负责维护和管理client连接。[远程通信](https://github.com/liuzm/distribute-clawler/blob/master/distribute-remoting/READM.md)
-  2. 提供统计和发放任务。
+  2. 提供统计和发放任务。通过command去收集client的信息。
   
 ## client
-  1. 负责爬取任务点的信息。
+  1. 负责采集任务。
   2. 任务job的控制和信息收集agent
   
 ## storage

@@ -239,10 +239,10 @@ public class NettyRemotingServer extends AbstractRemoting implements RemotingSer
         @Override
         public void channelInactive(ChannelHandlerContext ctx) throws Exception {
             final String remoteAddress = RemotingHelper.parseChannelRemoteAddr(ctx.channel());
+            logger.info("channelInactive ===" + remoteAddress);
             super.channelInactive(ctx);
 
         }
-
 
         @Override
         public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
@@ -250,10 +250,10 @@ public class NettyRemotingServer extends AbstractRemoting implements RemotingSer
                 IdleStateEvent evnet = (IdleStateEvent) evt;
                 if (evnet.state().equals(IdleState.ALL_IDLE)) {
                     final String remoteAddress = RemotingHelper.parseChannelRemoteAddr(ctx.channel());
+                    logger.info(evnet.state() +"===" + remoteAddress);
                     RemotingUtil.closeChannel(ctx.channel());
                 }
             }
-
             ctx.fireUserEventTriggered(evt);
         }
 
@@ -261,7 +261,7 @@ public class NettyRemotingServer extends AbstractRemoting implements RemotingSer
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
             final String remoteAddress = RemotingHelper.parseChannelRemoteAddr(ctx.channel());
-
+            logger.info("exceptionCaught ===" + remoteAddress);
             RemotingUtil.closeChannel(ctx.channel());
         }
     }

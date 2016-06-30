@@ -110,7 +110,7 @@ public class NettyRPCTest {
     @Test
     public void test_RPC_Async() throws InterruptedException, RemotingConnectException,
             RemotingSendRequestException, RemotingTimeoutException, RemotingException {
-    	RemotingServer server = createRemotingServer();
+    	//RemotingServer server = createRemotingServer();
         RemotingClient client = createRemotingClient();
         
         for (int i = 0; i < 10; i++) {

@@ -15,4 +15,20 @@ public class BlankCommandHeader implements CommandHeader {
 	public void checkFields() throws RemotingCommandException {
 		
 	}
+
+	/**
+	 * @return the nodeId
+	 */
+	public String getNodeId() {
+		return nodeId;
+	}
+
+	/**
+	 * @param nodeId the nodeId to set
+	 */
+	public void setNodeId(String nodeId) {
+		this.nodeId = nodeId;
+	}
+	
+	
 }
