@@ -3,7 +3,9 @@ package io.github.liuzm.crawler.pendingqueue.redis;
 import java.io.Serializable;
 import java.util.LinkedList;
 
-import org.redisson.client.RedisClient;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 public abstract class AbsRedisPendingQueue<T> implements Serializable{
 
@@ -14,8 +16,19 @@ public abstract class AbsRedisPendingQueue<T> implements Serializable{
 	
 	private LinkedList<T> Queue = null;
 	
-	private static  RedisClient c = new RedisClient("localhost", 6379);
+	private static Jedis jedis;
 	
+	static {
+		JedisPoolConfig config = new JedisPoolConfig();
+		config.setMaxTotal(300);
+		config.setMaxIdle(100);
+		config.setMaxWaitMillis(2000);
+		config.setTestOnBorrow(true);
+		
+		JedisPool jedisPool = new JedisPool(config,"127.0.0.1",6379,3000);
+		jedis=jedisPool.getResource();
+		
+	}
 	/**
 	 * 
 	 * 1. url  2.page 3. store 4. area
