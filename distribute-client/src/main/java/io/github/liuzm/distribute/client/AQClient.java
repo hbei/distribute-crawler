@@ -13,7 +13,7 @@ import io.github.liuzm.distribute.remoting.netty.ClientConfig;
 import io.github.liuzm.distribute.remoting.netty.NettyRemotingClient;
 import io.github.liuzm.distribute.remoting.protocol.Command;
 import io.github.liuzm.distribute.remoting.protocol.HeaderMessageCode;
-import io.github.liuzm.distribute.remoting.protocol.header.SSSDComandHeader;
+import io.github.liuzm.distribute.remoting.protocol.header.AckCommandHeader;
 
 /**
  * @author lxyq
@@ -37,8 +37,7 @@ public class AQClient{
 	}
 	
 	public void send() throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException{
-		SSSDComandHeader requestHeader = new SSSDComandHeader(remotingClient.getRegistryNode().getNode().getId());
-        requestHeader.setSssd(101);
+		AckCommandHeader requestHeader = new AckCommandHeader(remotingClient.getRegistryNode().getNode().getId(),1);
         Command request = Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND, requestHeader);
 		remotingClient.invokeSync(remotingClient.getRegistryNode().getNode().getId(), request, 3000);
 	}
