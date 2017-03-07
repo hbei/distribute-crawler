@@ -70,7 +70,6 @@ public class ClientCtlProcessor extends AbstractSendMessageProcessor {
 	private Command startCrawler(){
 		try {
 			String path = "D:\\GIT\\crawler\\distribute-clawler\\distribute-job\\src\\main\\resources\\oschina.xml";
-			AQClient.bootstrap.startByFilePath(path);
 			return Command.createResponseCommand(HeaderMessageCode.SERVER_SSSD_COMMAND, "start success");
 		} catch(Exception e){
 			e.printStackTrace();

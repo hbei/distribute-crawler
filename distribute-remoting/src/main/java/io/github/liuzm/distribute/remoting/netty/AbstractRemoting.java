@@ -9,7 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.github.liuzm.distribute.common.model.Node;
-import io.github.liuzm.distribute.registy.Registry;
+import io.github.liuzm.distribute.registy.RegistryNode;
+import io.github.liuzm.distribute.registy.RegistryNodeFactory;
 import io.github.liuzm.distribute.remoting.InvokeCallback;
 import io.github.liuzm.distribute.remoting.Processor;
 import io.github.liuzm.distribute.remoting.common.Pair;
@@ -28,40 +29,43 @@ import io.netty.channel.ChannelHandlerContext;
  */
 public abstract class AbstractRemoting {
 
-	/**
-	 * 分布式日志实现
-	 */
 	private static final Logger logger = LoggerFactory.getLogger(AbstractRemoting.class);
-
+	
 	/**
 	 * 应答表，存储对应的server和client的连接
 	 */
 	protected final ConcurrentHashMap<Integer, FutureResponse> responseTable = new ConcurrentHashMap<Integer, FutureResponse>(
 			256);
-
 	protected final HashMap<Integer, Pair<Processor, ExecutorService>> processorTable = new HashMap<Integer, Pair<Processor, ExecutorService>>(
 			64);
-	
 	/**
 	 * 默认的命令处理器
 	 */
 	protected Pair<Processor, ExecutorService> defaultProcessor;
-
 	protected ExecutorService defaultExecutor;
-
-	abstract public ExecutorService getOwnExecutor();
-
-	protected Node node;
-
-	private Registry register;
-	
 	// 信号量，异步调用情况会使用，防止本地Netty缓存请求过多
-    protected final Semaphore semaphoreAsync = new Semaphore(2, true);;
+    protected final Semaphore semaphoreAsync = new Semaphore(2, true);
     
-	public AbstractRemoting(final Node node, final Registry register) {
-		this.node = register.register(node);
-	}
-
+    protected int nodeType = 0;
+    
+    protected  RegistryNode registryNode;
+    
+    abstract public RegistryNodeFactory getRegisterNodeFactory();
+    
+    public AbstractRemoting(final int nodeType,final ServerConfig config){
+    	this.nodeType = nodeType;
+    	
+    	Node node = new Node();
+    	node.setType(nodeType);
+    	if(nodeType == 0){
+    		node.setPort(config.getListenPort());
+    	}
+		this.registryNode = getRegisterNodeFactory().getRegistryNode(node);
+		node = registryNode.register(node);
+    }
+    
+	
+	abstract public ExecutorService getOwnExecutor();
 	/**
 	 * remoting request
 	 * 
@@ -264,19 +268,5 @@ public abstract class AbstractRemoting {
 	}
 	
 	
-	/**
-	 * @return the register
-	 */
-	public Registry getRegister() {
-		return register;
-	}
-
-	/**
-	 * @param register
-	 *            the register to set
-	 */
-	public void setRegister(Registry register) {
-		this.register = register;
-	}
 
 }

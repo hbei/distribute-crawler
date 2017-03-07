@@ -2,6 +2,7 @@ package io.github.liuzm.distribute.remoting;
 
 import java.util.concurrent.ExecutorService;
 
+import io.github.liuzm.distribute.registy.RegistryNode;
 import io.github.liuzm.distribute.remoting.common.Pair;
 import io.github.liuzm.distribute.remoting.exception.RemotingSendRequestException;
 import io.github.liuzm.distribute.remoting.exception.RemotingTimeoutException;
@@ -29,4 +30,6 @@ public interface RemotingServer extends Service {
 	public void invokeAsync(final Channel channel, final Command request, final long timeoutMillis,
             final InvokeCallback invokeCallback) throws InterruptedException,
             RemotingTooMuchRequestException, RemotingTimeoutException, RemotingSendRequestException;
+	
+	public RegistryNode getRegistryNode();
 }

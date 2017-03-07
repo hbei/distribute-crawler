@@ -16,7 +16,4 @@ public interface Registry {
 	 */
 	Node register(Node node);
 	
-	// void subscribe(Node node, NotifyListener listener);
-	
-	// void unsubscribe(Node node, NotifyListener listener);
 }

@@ -19,7 +19,9 @@ import com.alibaba.fastjson.JSONObject;
 import io.github.liuzm.distribute.common.config.Config;
 import io.github.liuzm.distribute.common.model.Node;
 import io.github.liuzm.distribute.common.util.ZKUtil;
-import io.github.liuzm.distribute.registy.Registry;
+import io.github.liuzm.distribute.registy.RegistryNode;
+import io.github.liuzm.distribute.registy.RegistryNodeFactory;
+import io.github.liuzm.distribute.registy.impl.DefaultRegistryNodeFactory;
 import io.github.liuzm.distribute.remoting.InvokeCallback;
 import io.github.liuzm.distribute.remoting.Processor;
 import io.github.liuzm.distribute.remoting.RemotingClient;
@@ -38,6 +40,7 @@ import io.github.liuzm.distribute.remoting.protocol.header.AckCommandHeader;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
@@ -62,13 +65,10 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 	private final ClientConfig nettyClientConfig;
 	private final Bootstrap bootstrap = new Bootstrap();
 	private final EventLoopGroup eventLoopGroupWorker;
-
 	private final ExecutorService publicExecutor;
-	
-	
-	public NettyRemotingClient(final ClientConfig nettyClientConfig, final Node node, final Registry register) {
-		super(node, register);
-		super.setRegister(register);
+
+	public NettyRemotingClient(final ClientConfig nettyClientConfig) {
+		super(1,null);
 		this.nettyClientConfig = nettyClientConfig;
 		this.eventLoopGroupWorker = new NioEventLoopGroup();
 
@@ -80,35 +80,32 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 				return new Thread(r, "ClientPublicExecutor_" + this.threadIndex.incrementAndGet());
 			}
 		});
-		
+
 	}
 
 	@Override
 	public void start() {
-		Bootstrap b = this.bootstrap.group(this.eventLoopGroupWorker)
-				.channel(NioSocketChannel.class)//
-				.option(ChannelOption.TCP_NODELAY, true)
-				.option(ChannelOption.SO_KEEPALIVE, true)
+		Bootstrap b = this.bootstrap.group(this.eventLoopGroupWorker).channel(NioSocketChannel.class)//
+				.option(ChannelOption.TCP_NODELAY, true).option(ChannelOption.SO_KEEPALIVE, true)
 				.option(ChannelOption.SO_SNDBUF, nettyClientConfig.getClientSocketSndBufSize())
 				.handler(new ChannelInitializer<SocketChannel>() {
 					@Override
 					public void initChannel(SocketChannel ch) throws Exception {
-						ch.pipeline().addLast(
-								new NettyEncoder(), 
-								new NettyDecoder(),
+						ch.pipeline().addLast(new NettyEncoder(), new NettyDecoder(),
 								new IdleStateHandler(0, 0, nettyClientConfig.getClientChannelMaxIdleTimeSeconds()), //
-								new ClientHandler(),
-								new NettyConnetManageHandler());
+								new ClientHandler(), new NettyConnetManageHandler());
 					}
 				});
-		// 从zookeeper上获取server的建立连接 
+		// 从zookeeper上获取server的建立连接;目前默认是从服务端第一个节点建立链接
 		if(ZKUtil.exists(Config.ZKPath.REGISTER_SERVER_PATH)){
 			List<String> servers;
 			try {
 				servers = ZKUtil.getChildren(Config.ZKPath.REGISTER_SERVER_PATH);
 				if(servers != null && servers.size() > 0){
 					Node node = (Node) JSONObject.parseObject((ZKUtil.getPathData(Config.ZKPath.REGISTER_SERVER_PATH+"/"+servers.get(0))), Node.class);
-					b.connect(new InetSocketAddress(node.getIpaddress(), node.getPort())).sync();
+					ChannelFuture future = b.connect(new InetSocketAddress(node.getIpaddress(), node.getPort())).sync();
+					// 建立链接完成后
+					ChannelManager.put(getRegistryNode().getNode().getId(), future.channel());
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -132,84 +129,88 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 	}
 
 	class ClientHandler extends ChannelInboundHandlerAdapter {
-		
+
 		@Override
-	    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-			Command cmd = Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND, new AckCommandHeader(node.getId(),HeaderMessageCode.ACK_COMMAND_CONNECT));
-	        ctx.writeAndFlush(cmd);
-	    }
-		
+		public void channelActive(ChannelHandlerContext ctx) throws Exception {
+			
+			ChannelManager.put(getRegistryNode().getNode().getId(), ctx.channel());
+			
+			Command cmd = Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND,
+					new AckCommandHeader(registryNode.getNode().getId(), HeaderMessageCode.ACK_COMMAND_CONNECT));
+			ctx.writeAndFlush(cmd);
+		}
+
 		@Override
 		public void channelRead(ChannelHandlerContext ctx, Object request) throws Exception {
-			System.out.println("client >>>  "+ request);
 			if (request instanceof Command) {
 				Command c = (Command) request;
 				processMessageReceived(ctx, c);
 			}
 		}
-		
+
 		@Override
-	    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-			Command cmd = Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND, new AckCommandHeader(node.getId(),HeaderMessageCode.ACK_COMMAND_DISCONNECT));
-	        ctx.writeAndFlush(cmd);
-	    }
+		public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+			
+			ChannelManager.disConnect(registryNode.getNode().getId());
+			
+			Command cmd = Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND,
+					new AckCommandHeader(registryNode.getNode().getId(), HeaderMessageCode.ACK_COMMAND_DISCONNECT));
+			ctx.writeAndFlush(cmd);
+		}
 	}
-	
+
 	class NettyConnetManageHandler extends ChannelDuplexHandler {
-		
+
 		@Override
-        public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress,
-                SocketAddress localAddress, ChannelPromise promise) throws Exception {
-            final String local = localAddress == null ? "UNKNOW" : localAddress.toString();
-            final String remote = remoteAddress == null ? "UNKNOW" : remoteAddress.toString();
-            logger.info("NETTY CLIENT PIPELINE: CONNECT  {} => {}", local, remote);
-            super.connect(ctx, remoteAddress, localAddress, promise);
-        }
+		public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress,
+				ChannelPromise promise) throws Exception {
+			final String local = localAddress == null ? "UNKNOW" : localAddress.toString();
+			final String remote = remoteAddress == null ? "UNKNOW" : remoteAddress.toString();
+			logger.info("NETTY CLIENT PIPELINE: CONNECT  {} => {}", local, remote);
+			ChannelManager.put(getRegistryNode().getNode().getId(), ctx.channel());
+			super.connect(ctx, remoteAddress, localAddress, promise);
+		}
 
+		@Override
+		public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
+			final String remoteAddress = RemotingHelper.parseChannelRemoteAddr(ctx.channel());
+			closeChannel(ctx.channel());
+			super.disconnect(ctx, promise);
+			logger.info("NETTY CLIENT PIPELINE: disCONNECT  {} => {}", remoteAddress);
 
-        @Override
-        public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-            final String remoteAddress = RemotingHelper.parseChannelRemoteAddr(ctx.channel());
-            closeChannel(ctx.channel());
-            super.disconnect(ctx, promise);
-            logger.info("NETTY CLIENT PIPELINE: disCONNECT  {} => {}", remoteAddress);
-            
-        }
+		}
 
+		@Override
+		public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
+			final String remoteAddress = RemotingHelper.parseChannelRemoteAddr(ctx.channel());
+			logger.info("NETTY CLIENT PIPELINE: CLOSE {}", remoteAddress);
+			closeChannel(ctx.channel());
+			super.close(ctx, promise);
+		}
 
-        @Override
-        public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-            final String remoteAddress = RemotingHelper.parseChannelRemoteAddr(ctx.channel());
-            logger.info("NETTY CLIENT PIPELINE: CLOSE {}", remoteAddress);
-            closeChannel(ctx.channel());
-            super.close(ctx, promise);
-            ChannelManager.disConnect(node.getId());
-        }
+		@Override
+		public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+			final String remoteAddress = RemotingHelper.parseChannelRemoteAddr(ctx.channel());
+			logger.warn("NETTY CLIENT PIPELINE: exceptionCaught {}", remoteAddress);
+			logger.warn("NETTY CLIENT PIPELINE: exceptionCaught exception.", cause);
+			closeChannel(ctx.channel());
+		}
 
+		@Override
+		public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+			if (evt instanceof IdleStateEvent) {
+				IdleStateEvent evnet = (IdleStateEvent) evt;
+				if (evnet.state().equals(IdleState.ALL_IDLE)) {
+					final String remoteAddress = RemotingHelper.parseChannelRemoteAddr(ctx.channel());
+					logger.warn("NETTY CLIENT PIPELINE: IDLE exception [{}]", remoteAddress);
+					ctx.channel().writeAndFlush(Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND,
+							new AckCommandHeader(registryNode.getNode().getId(), 2)));
+				}
+			}
 
-        @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-            final String remoteAddress = RemotingHelper.parseChannelRemoteAddr(ctx.channel());
-            logger.warn("NETTY CLIENT PIPELINE: exceptionCaught {}", remoteAddress);
-            logger.warn("NETTY CLIENT PIPELINE: exceptionCaught exception.", cause);
-            closeChannel(ctx.channel());
-        }
-
-
-        @Override
-        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-            if (evt instanceof IdleStateEvent) {
-                IdleStateEvent evnet = (IdleStateEvent) evt;
-                if (evnet.state().equals(IdleState.ALL_IDLE)) {
-                    final String remoteAddress = RemotingHelper.parseChannelRemoteAddr(ctx.channel());
-                    logger.warn("NETTY CLIENT PIPELINE: IDLE exception [{}]", remoteAddress);
-                    ctx.channel().writeAndFlush(Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND, new AckCommandHeader(node.getId(), 2)));
-                }
-            }
-
-            ctx.fireUserEventTriggered(evt);
-        }
-    }
+			ctx.fireUserEventTriggered(evt);
+		}
+	}
 
 	@Override
 	public void registerProcessor(int requestCode, Processor processor, ExecutorService executor) {
@@ -221,7 +222,7 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 		Pair<Processor, ExecutorService> pair = new Pair<Processor, ExecutorService>(processor, executorThis);
 		this.processorTable.put(requestCode, pair);
 	}
-	
+
 	@Override
 	public Command invokeSync(String nodeId, Command request, long timeoutMillis) throws InterruptedException,
 			RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException {
@@ -230,8 +231,6 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 		return response;
 	}
 
-	
-	
 	/**
 	 * 异步应答
 	 */
@@ -242,19 +241,28 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 		final Channel channel = ChannelManager.get(nodeId);
 		this.invokeAsyncImpl(channel, request, timeoutMillis, invokeCallback);
 	}
-	
+
 	public void closeChannel(final Channel channel) {
-        if (null == channel)
-            return;
-        ChannelManager.disConnect(this.node.getId());
-    }
-	
+		if (null == channel)
+			return;
+		ChannelManager.disConnect(registryNode.getNode().getId());
+	}
+
 	@Override
 	public boolean isChannelWriteable(String addr) {
-		if(ChannelManager.get(addr) != null){
+		if (ChannelManager.get(addr) != null) {
 			return true;
 		}
 		return false;
 	}
 
+	@Override
+	public RegistryNodeFactory getRegisterNodeFactory() {
+		return new DefaultRegistryNodeFactory();
+	}
+	
+	@Override
+	public RegistryNode getRegistryNode(){
+		return registryNode;
+	}
 }

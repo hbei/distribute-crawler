@@ -22,62 +22,59 @@ import io.netty.channel.Channel;
  *
  */
 public class ChannelManager {
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(ChannelManager.class);
-	
+
 	public static final ConcurrentMap<String/** nodeId **/, Channel> channelTables = new ConcurrentHashMap<String, Channel>();
-	
 	private static final Lock lockChannelTables = new ReentrantLock();
-	
 	private static final long LockTimeoutMillis = 3000;
 	
-	public static Channel get(String nodeId){
-		if(nodeId != null){
+	public static Channel get(String nodeId) {
+		if (nodeId != null) {
 			return channelTables.get(nodeId);
 		}
 		return null;
 	}
-	
-	
-	public static void put(String nodeId,Channel channel){
-		
-		try{
-			if(channelTables.get(nodeId) != null){
+
+	public static void put(String nodeId, Channel channel) {
+
+		try {
+			if (channelTables.get(nodeId) != null) {
 				// 判断一下该连接是否有效
 			}
-			
-			if(lockChannelTables.tryLock(LockTimeoutMillis, TimeUnit.MILLISECONDS)){
-				 channelTables.put(nodeId, channel);
+
+			if (lockChannelTables.tryLock(LockTimeoutMillis, TimeUnit.MILLISECONDS)) {
+				channelTables.put(nodeId, channel);
 			}
-			
-		}catch(Exception e){
+
+		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("channel table error =" +nodeId );
-		}finally {
+			logger.error("channel table error =" + nodeId);
+		} finally {
 			lockChannelTables.unlock();
 		}
 	}
-	
-	public static Channel disConnect(String nodeId){
-		try{
+
+	public static Channel disConnect(String nodeId) {
+		try {
 			final Channel channel = channelTables.get(nodeId);
-			if(lockChannelTables.tryLock(LockTimeoutMillis, TimeUnit.MILLISECONDS)){
-				if(channel != null && channel.isActive()){
+			if (lockChannelTables.tryLock(LockTimeoutMillis, TimeUnit.MILLISECONDS)) {
+				if (channel != null && channel.isActive()) {
 					return channel;
-				}else if(channel != null && !channel.isActive()){ // 该连接存在，并且连接不被占用
+				} else if (channel != null && !channel.isActive()) { // 该连接存在，并且连接不被占用
 					channelTables.remove(nodeId);
-					logger.info("channel table remove =" +nodeId );
+					logger.info("channel table remove =" + nodeId);
 					return null;
 				}
 			}
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
-		}finally {
+		} finally {
 			lockChannelTables.unlock();
 		}
 		return null;
 	}
-	
+
 	public static boolean containsKey(String key) {
 		return channelTables.containsKey(key);
 	}

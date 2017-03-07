@@ -8,10 +8,7 @@ import java.util.concurrent.Executors;
 import org.junit.Test;
 
 import io.github.liuzm.distribute.common.config.Config;
-import io.github.liuzm.distribute.common.model.Node;
 import io.github.liuzm.distribute.common.zookeeper.ZkClient;
-import io.github.liuzm.distribute.registy.Registry;
-import io.github.liuzm.distribute.registy.impl.DefaultRegistry;
 import io.github.liuzm.distribute.remoting.InvokeCallback;
 import io.github.liuzm.distribute.remoting.Processor;
 import io.github.liuzm.distribute.remoting.RemotingClient;
@@ -40,12 +37,7 @@ public class NettyRPCTest {
 	
 	public static RemotingClient createRemotingClient() {
         ClientConfig config = new ClientConfig();
-        Node node = new Node();
-        node.setType(1);
-        Registry register = new DefaultRegistry(node);
-        
-        RemotingClient client = new NettyRemotingClient(config,node,register);
-        
+        RemotingClient client = new NettyRemotingClient(config);
         client.registerProcessor(HeaderMessageCode.ACK_COMMAND, new Processor() {
 			@Override
 			public Command process(ChannelHandlerContext ctx, Command c) throws Exception {
@@ -54,19 +46,13 @@ public class NettyRPCTest {
 				return Command.createResponseCommand(HeaderMessageCode.CONSUMER_SEND_MSG_BACK, "i am a client I have recived your message !!!");
 			}
 		}, Executors.newCachedThreadPool());
-        client.start();
-        
         return client;
     }
 
 
     public static RemotingServer createRemotingServer() throws InterruptedException {
         ServerConfig config = new ServerConfig();
-        Node node = new Node();
-        node.setType(0);
-        Registry register = new DefaultRegistry(node);
-        RemotingServer remotingServer = new NettyRemotingServer(config,node,register);
-        
+        RemotingServer remotingServer = new NettyRemotingServer(config);
         remotingServer.registerDefaultProcessor(new Processor() {
 			@Override
 			public Command process(ChannelHandlerContext ctx, Command c) throws Exception {
@@ -89,13 +75,13 @@ public class NettyRPCTest {
             RemotingSendRequestException, RemotingTimeoutException {
     	RemotingServer server = createRemotingServer();
         RemotingClient client = createRemotingClient();
-        
+        client.start();
         for (int i = 0; i < 10; i++) {
             SSSDComandHeader requestHeader = new SSSDComandHeader(zkClient.getRandomClientNodeId());
             requestHeader.setSssd(101);
             Command request = Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND, requestHeader);
             
-            final Channel channel = ChannelManager.get(zkClient.getRandomClientNodeId());
+            final Channel channel = ChannelManager.get(client.getRegistryNode().getNode().getId());
             System.out.println("channel >> "+channel);
             Command response = client.invokeSync(zkClient.getRandomClientNodeId(),request, 3000);
             
@@ -107,10 +93,10 @@ public class NettyRPCTest {
         
     }
     
-    @Test
+   // @Test
     public void test_RPC_Async() throws InterruptedException, RemotingConnectException,
             RemotingSendRequestException, RemotingTimeoutException, RemotingException {
-    	//RemotingServer server = createRemotingServer();
+    	RemotingServer server = createRemotingServer();
         RemotingClient client = createRemotingClient();
         
         for (int i = 0; i < 10; i++) {
@@ -118,7 +104,7 @@ public class NettyRPCTest {
             requestHeader.setSssd(101);
             Command request = Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND, requestHeader);
             
-            final Channel channel = ChannelManager.get(zkClient.getRandomClientNodeId());
+            final Channel channel = ChannelManager.get(client.getRegistryNode().getNode().getId());
             System.out.println("channel >> "+channel);
             // tcp是双工的，应该可以写数据给client端
             client.invokeAsync(zkClient.getRandomClientNodeId(),request, 3000,new InvokeCallback() {
@@ -133,7 +119,7 @@ public class NettyRPCTest {
         //server.shutdown();
     }
     
-    @Test
+   // @Test
     public void test_server_call_client() throws InterruptedException, RemotingConnectException,
             RemotingSendRequestException, RemotingTimeoutException, RemotingException {
     	RemotingServer server = createRemotingServer();
@@ -155,4 +141,8 @@ public class NettyRPCTest {
         server.shutdown();
     }
     
+    
+    public static void main(String[] args) {
+    	RemotingClient client = createRemotingClient();
+	}
 }

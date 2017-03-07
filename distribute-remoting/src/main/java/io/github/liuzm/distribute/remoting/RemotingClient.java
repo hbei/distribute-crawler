@@ -2,6 +2,7 @@ package io.github.liuzm.distribute.remoting;
 
 import java.util.concurrent.ExecutorService;
 
+import io.github.liuzm.distribute.registy.RegistryNode;
 import io.github.liuzm.distribute.remoting.exception.RemotingConnectException;
 import io.github.liuzm.distribute.remoting.exception.RemotingSendRequestException;
 import io.github.liuzm.distribute.remoting.exception.RemotingTimeoutException;
@@ -22,4 +23,6 @@ public interface RemotingClient extends Service {
 	            final ExecutorService executor);
 	
 	public boolean isChannelWriteable(final String addr);
+	
+	public RegistryNode getRegistryNode();
 }

@@ -5,6 +5,7 @@ package io.github.liuzm.distribute.remoting.netty;
  *
  */
 public class ClientConfig {
+	
 	/**
      * Worker thread number
      */
@@ -12,13 +13,11 @@ public class ClientConfig {
     private int clientCallbackExecutorThreads = Runtime.getRuntime().availableProcessors();
     private long connectTimeoutMillis = 3000;
     private long channelNotActiveInterval = 1000 * 60;
-    /**
-     * IdleStateEvent will be triggered when neither read nor write was performed for
-     * the specified period of this time. Specify {@code 0} to disable
-     */
     private int clientChannelMaxIdleTimeSeconds = 120;
     private int clientSocketSndBufSize = SystemConfig.SocketSndbufSize;
     private boolean clientPooledByteBufAllocatorEnable = false;
+    
+    
 	/**
 	 * @return the clientWorkerThreads
 	 */

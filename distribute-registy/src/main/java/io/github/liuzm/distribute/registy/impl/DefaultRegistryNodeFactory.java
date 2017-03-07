@@ -13,7 +13,6 @@ import io.github.liuzm.distribute.registy.support.AbstractRegistryNodeFactory;
  */
 public class DefaultRegistryNodeFactory extends AbstractRegistryNodeFactory {
 
-
 	@Override
 	protected RegistryNode createRegistry(Node node) {
 		return new DefaultRegistry(node);

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.github.liuzm.distribute.common.model.Node;
 import io.github.liuzm.distribute.remoting.protocol.Command;
-import io.github.liuzm.distribute.server.api.AQServer;
+import io.github.liuzm.distribute.server.api.AQServerService;
 
 /**
  * @author qydpc
@@ -22,7 +22,7 @@ import io.github.liuzm.distribute.server.api.AQServer;
 public class ServerController {
 	
 	@Autowired
-	private AQServer aqServer;
+	private AQServerService aqServer;
 	
 	
 	@RequestMapping("detailServer")

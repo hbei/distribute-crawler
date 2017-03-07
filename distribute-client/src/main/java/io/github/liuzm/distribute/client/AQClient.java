@@ -5,25 +5,42 @@ package io.github.liuzm.distribute.client;
 
 import org.apache.log4j.Logger;
 
-import io.github.liuzm.crawler.bootsStrap.BootStrap;
-import io.github.liuzm.distribute.common.model.Node;
-import io.github.liuzm.distribute.registy.Registry;
+import io.github.liuzm.distribute.remoting.RemotingClient;
+import io.github.liuzm.distribute.remoting.exception.RemotingConnectException;
+import io.github.liuzm.distribute.remoting.exception.RemotingSendRequestException;
+import io.github.liuzm.distribute.remoting.exception.RemotingTimeoutException;
 import io.github.liuzm.distribute.remoting.netty.ClientConfig;
 import io.github.liuzm.distribute.remoting.netty.NettyRemotingClient;
+import io.github.liuzm.distribute.remoting.protocol.Command;
+import io.github.liuzm.distribute.remoting.protocol.HeaderMessageCode;
+import io.github.liuzm.distribute.remoting.protocol.header.SSSDComandHeader;
 
 /**
  * @author lxyq
  *
  */
-public class AQClient extends NettyRemotingClient{
+public class AQClient{
 	
 	private static final Logger logger = Logger.getLogger(AQClient.class);
 	
-	public static final BootStrap bootstrap = BootStrap.getInstance();
+	private final RemotingClient remotingClient;
 	
-	public AQClient(ClientConfig nettyClientConfig, Node node, Registry register) {
-		super(nettyClientConfig, node, register);
+	public AQClient(){
+		ClientConfig config = new ClientConfig();
+		NettyRemotingClient nettyClient = new NettyRemotingClient(config);
+		AQClientInitializer.buildClient(nettyClient);
+		this.remotingClient = nettyClient;
 	}
 	
+	public void start(){
+		remotingClient.start();
+	}
+	
+	public void send() throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException{
+		SSSDComandHeader requestHeader = new SSSDComandHeader(remotingClient.getRegistryNode().getNode().getId());
+        requestHeader.setSssd(101);
+        Command request = Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND, requestHeader);
+		remotingClient.invokeSync(remotingClient.getRegistryNode().getNode().getId(), request, 3000);
+	}
 	
 }
