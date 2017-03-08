@@ -6,17 +6,21 @@ package io.github.liuzm.distribute.remoting.protocol.header;
 import java.util.List;
 
 import io.github.liuzm.distribute.remoting.exception.RemotingCommandException;
-import io.github.liuzm.distribute.remoting.protocol.CommandHeader;
+import io.github.liuzm.distribute.remoting.protocol.CommandBody;
 
 /**
  * @author xh-liuzhimin
  *
  */
-public class TaskCommandHeader implements CommandHeader {
+public class TaskCommand implements CommandBody {
 	
 	private String nodeId;
 	
-	public TaskCommandHeader(String nodeId) {
+	public TaskCommand(){
+		
+	}
+	
+	public TaskCommand(String nodeId) {
 		this.nodeId = nodeId;
 	}
 

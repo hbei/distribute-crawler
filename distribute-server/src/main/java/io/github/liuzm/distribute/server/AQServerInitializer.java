@@ -17,7 +17,7 @@ public class AQServerInitializer {
         aqserver.registerProcessor(HeaderMessageCode.SERVER_SSSD_COMMAND, new NodeProcessor(), Executors.newCachedThreadPool());
         aqserver.registerProcessor(HeaderMessageCode.SERVER_TASK_COMMAND, new TaskRecivedProcessor(), Executors.newCachedThreadPool());
         aqserver.registerProcessor(HeaderMessageCode.SERVER_JOB_STATUS, new JobProcessor(), Executors.newCachedThreadPool());
-        aqserver.registerProcessor(HeaderMessageCode.SERVER_MESSAGE_STATUS, new MessageRecivedProcessor(), Executors.newCachedThreadPool());
+        aqserver.registerProcessor(HeaderMessageCode.MESSAGE_COMMAND, new MessageRecivedProcessor(), Executors.newCachedThreadPool());
     }
 
 }

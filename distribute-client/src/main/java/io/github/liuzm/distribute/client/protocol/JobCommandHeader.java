@@ -1,9 +1,9 @@
 package io.github.liuzm.distribute.client.protocol;
 
 import io.github.liuzm.distribute.remoting.exception.RemotingCommandException;
-import io.github.liuzm.distribute.remoting.protocol.CommandHeader;
+import io.github.liuzm.distribute.remoting.protocol.CommandBody;
 
-public class JobCommandHeader implements CommandHeader {
+public class JobCommandHeader implements CommandBody {
 	
 	private String nodeId;
 	

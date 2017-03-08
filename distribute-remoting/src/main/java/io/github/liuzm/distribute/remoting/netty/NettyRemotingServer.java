@@ -2,7 +2,6 @@ package io.github.liuzm.distribute.remoting.netty;
 
 import java.net.InetSocketAddress;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -52,13 +51,8 @@ public class NettyRemotingServer extends AbstractRemoting implements RemotingSer
 	private final EventLoopGroup eventLoopGroupWorker;
 	private final EventLoopGroup eventLoopGroupBoss;
 	private final ServerConfig nettyServerConfig;
-
 	// 处理Callback应答器
 	private final ExecutorService publicExecutor;
-
-	protected final HashMap<Integer, Pair<Processor, ExecutorService>> processorTable = new HashMap<Integer, Pair<Processor, ExecutorService>>(
-			64);
-
 	private int port = 0;
 
 	public NettyRemotingServer(final ServerConfig nettyServerConfig) {

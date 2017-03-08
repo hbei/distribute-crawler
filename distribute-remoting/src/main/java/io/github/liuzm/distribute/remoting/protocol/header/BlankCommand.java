@@ -1,31 +1,23 @@
-/**
- * 
- */
 package io.github.liuzm.distribute.remoting.protocol.header;
 
 import io.github.liuzm.distribute.remoting.exception.RemotingCommandException;
-import io.github.liuzm.distribute.remoting.protocol.CommandHeader;
+import io.github.liuzm.distribute.remoting.protocol.CommandBody;
 
-/**
- * @author xh-liuzhimin
- *
- */
-public class SSSDComandHeader implements CommandHeader {
+public class BlankCommand implements CommandBody {
 	
 	private String nodeId;
 	
-	public SSSDComandHeader(String nodeId) {
+	public BlankCommand(){
+		
+	}
+	
+	public BlankCommand(String nodeId){
 		this.nodeId = nodeId;
 	}
 
-	/**
-	 * 101 start 102 stop 103 supended 104 detroy  
-	 */
-	private int sssd;
-
 	@Override
 	public void checkFields() throws RemotingCommandException {
-
+		
 	}
 
 	/**
@@ -41,19 +33,6 @@ public class SSSDComandHeader implements CommandHeader {
 	public void setNodeId(String nodeId) {
 		this.nodeId = nodeId;
 	}
-
-	/**
-	 * @return the sssd
-	 */
-	public int getSssd() {
-		return sssd;
-	}
-
-	/**
-	 * @param sssd the sssd to set
-	 */
-	public void setSssd(int sssd) {
-		this.sssd = sssd;
-	}
+	
 	
 }

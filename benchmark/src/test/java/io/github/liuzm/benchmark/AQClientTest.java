@@ -12,7 +12,7 @@ public class AQClientTest {
 		client.start();
 		
 		try {
-			client.send();
+			client.sendMessage();
 		} catch (RemotingConnectException e) {
 			e.printStackTrace();
 		} catch (RemotingSendRequestException e) {

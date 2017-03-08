@@ -19,21 +19,8 @@ public class JobStatusProcessor implements Processor {
 
 	@Override
 	public Command process(ChannelHandlerContext ctx, Command c) throws Exception {
-		final Command response = Command.createResponseCommand(HeaderMessageCode.SERVER_JOB_STATUS, "server query crawler status", JobCommandHeader.class);
-		JobCommandHeader header =  new JobCommandHeader(c.getExtFields().get("nodeId"));
-		Collection<String> js = JobManager.getJobs().keySet();
-		for(String j:js){
-			String job = JobManager.getJob(j).getConfiguration().getJobName();
-			Map<String, Long> urlstatus = PendingManager.getPendingUlr(job).pendingStatus();
-			Map<String, Long> pagestatus = PendingManager.getPendingPages(job).pendingStatus();
-			Map<String, Long> storestatus = PendingManager.getPendingStore(job).pendingStatus();
-			
-			header.setJson(urlstatus.toString());
-		}
-		response.writeCustomHeader(header);
-		response.setBody(JSON.toJSONString(response).getBytes());
 		
-		return response;
+		return null;
 	}
 
 }

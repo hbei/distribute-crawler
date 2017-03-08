@@ -36,7 +36,7 @@ import io.github.liuzm.distribute.remoting.netty.codec.NettyDecoder;
 import io.github.liuzm.distribute.remoting.netty.codec.NettyEncoder;
 import io.github.liuzm.distribute.remoting.protocol.Command;
 import io.github.liuzm.distribute.remoting.protocol.HeaderMessageCode;
-import io.github.liuzm.distribute.remoting.protocol.header.AckCommandHeader;
+import io.github.liuzm.distribute.remoting.protocol.header.AckCommand;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
@@ -136,7 +136,7 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 			ChannelManager.put(getRegistryNode().getNode().getId(), ctx.channel());
 			
 			Command cmd = Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND,
-					new AckCommandHeader(registryNode.getNode().getId(), HeaderMessageCode.ACK_COMMAND_CONNECT));
+					new AckCommand(registryNode.getNode().getId(), HeaderMessageCode.ACK_COMMAND_CONNECT));
 			ctx.writeAndFlush(cmd);
 		}
 
@@ -154,7 +154,7 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 			ChannelManager.disConnect(registryNode.getNode().getId());
 			
 			Command cmd = Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND,
-					new AckCommandHeader(registryNode.getNode().getId(), HeaderMessageCode.ACK_COMMAND_DISCONNECT));
+					new AckCommand(registryNode.getNode().getId(), HeaderMessageCode.ACK_COMMAND_DISCONNECT));
 			ctx.writeAndFlush(cmd);
 		}
 	}
@@ -204,7 +204,7 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 					final String remoteAddress = RemotingHelper.parseChannelRemoteAddr(ctx.channel());
 					logger.warn("NETTY CLIENT PIPELINE: IDLE exception [{}]", remoteAddress);
 					ctx.channel().writeAndFlush(Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND,
-							new AckCommandHeader(registryNode.getNode().getId(), 2)));
+							new AckCommand(registryNode.getNode().getId(), 2)));
 				}
 			}
 

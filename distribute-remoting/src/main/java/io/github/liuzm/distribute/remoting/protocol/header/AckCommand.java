@@ -4,19 +4,23 @@
 package io.github.liuzm.distribute.remoting.protocol.header;
 
 import io.github.liuzm.distribute.remoting.exception.RemotingCommandException;
-import io.github.liuzm.distribute.remoting.protocol.CommandHeader;
+import io.github.liuzm.distribute.remoting.protocol.CommandBody;
 
 /**
  * @author qydpc
  *
  */
-public class AckCommandHeader implements CommandHeader {
+public class AckCommand implements CommandBody {
 	
 	private int conn;
 	
 	private String nodeId;
 	
-	public AckCommandHeader(String nodeId,int conn) {
+	public AckCommand(){
+		
+	}
+	
+	public AckCommand(String nodeId,int conn) {
 		this.nodeId = nodeId;
 		this.conn = conn;
 	}

@@ -49,8 +49,7 @@ public class ServerController {
 	@ResponseBody
 	public String getCrawlerStatus(@PathVariable("nodeId") String nodeId){
 		try{
-			Command response = aqServer.getCrawlerStatusByClientNodeId(nodeId);
-			return response.getExtFields().toString();
+			return null;
 		}catch(Exception e){
 			e.printStackTrace();
 			return "error";

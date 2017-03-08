@@ -1,15 +1,8 @@
 package io.github.liuzm.distribute.remoting.common;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 
-import io.github.liuzm.distribute.remoting.exception.RemotingConnectException;
-import io.github.liuzm.distribute.remoting.exception.RemotingSendRequestException;
-import io.github.liuzm.distribute.remoting.exception.RemotingTimeoutException;
-import io.github.liuzm.distribute.remoting.protocol.Command;
 import io.netty.channel.Channel;
 
 
@@ -48,121 +41,6 @@ public class RemotingHelper {
         InetSocketAddress isa = new InetSocketAddress(s[0], Integer.valueOf(s[1]));
         return isa;
     }
-
-
-    /**
-     * 短连接调用 TODO
-     */
-    public static Command invokeSync(final String addr, final Command request,
-            final long timeoutMillis) throws InterruptedException, RemotingConnectException,
-            RemotingSendRequestException, RemotingTimeoutException {
-        long beginTime = System.currentTimeMillis();
-        SocketAddress socketAddress = RemotingUtil.string2SocketAddress(addr);
-        SocketChannel socketChannel = RemotingUtil.connect(socketAddress);
-        if (socketChannel != null) {
-            boolean sendRequestOK = false;
-
-            try {
-                // 使用阻塞模式
-                socketChannel.configureBlocking(true);
-                /*
-                 * FIXME The read methods in SocketChannel (and DatagramChannel)
-                 * do notsupport timeouts
-                 * http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4614802
-                 */
-                socketChannel.socket().setSoTimeout((int) timeoutMillis);
-
-                // 发送数据
-                ByteBuffer byteBufferRequest = request.encode();
-                while (byteBufferRequest.hasRemaining()) {
-                    int length = socketChannel.write(byteBufferRequest);
-                    if (length > 0) {
-                        if (byteBufferRequest.hasRemaining()) {
-                            if ((System.currentTimeMillis() - beginTime) > timeoutMillis) {
-                                // 发送请求超时
-                                throw new RemotingSendRequestException(addr);
-                            }
-                        }
-                    }
-                    else {
-                        throw new RemotingSendRequestException(addr);
-                    }
-
-                    // 比较土
-                    Thread.sleep(1);
-                }
-
-                sendRequestOK = true;
-
-                // 接收应答 SIZE
-                ByteBuffer byteBufferSize = ByteBuffer.allocate(4);
-                while (byteBufferSize.hasRemaining()) {
-                    int length = socketChannel.read(byteBufferSize);
-                    if (length > 0) {
-                        if (byteBufferSize.hasRemaining()) {
-                            if ((System.currentTimeMillis() - beginTime) > timeoutMillis) {
-                                // 接收应答超时
-                                throw new RemotingTimeoutException(addr, timeoutMillis);
-                            }
-                        }
-                    }
-                    else {
-                        throw new RemotingTimeoutException(addr, timeoutMillis);
-                    }
-
-                    // 比较土
-                    Thread.sleep(1);
-                }
-
-                // 接收应答 BODY
-                int size = byteBufferSize.getInt(0);
-                ByteBuffer byteBufferBody = ByteBuffer.allocate(size);
-                while (byteBufferBody.hasRemaining()) {
-                    int length = socketChannel.read(byteBufferBody);
-                    if (length > 0) {
-                        if (byteBufferBody.hasRemaining()) {
-                            if ((System.currentTimeMillis() - beginTime) > timeoutMillis) {
-                                // 接收应答超时
-                                throw new RemotingTimeoutException(addr, timeoutMillis);
-                            }
-                        }
-                    }
-                    else {
-                        throw new RemotingTimeoutException(addr, timeoutMillis);
-                    }
-
-                    // 比较土
-                    Thread.sleep(1);
-                }
-
-                // 对应答数据解码
-                byteBufferBody.flip();
-                return Command.decode(byteBufferBody);
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-
-                if (sendRequestOK) {
-                    throw new RemotingTimeoutException(addr, timeoutMillis);
-                }
-                else {
-                    throw new RemotingSendRequestException(addr);
-                }
-            }
-            finally {
-                try {
-                    socketChannel.close();
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        else {
-            throw new RemotingConnectException(addr);
-        }
-    }
-
 
     public static String parseChannelRemoteAddr(final Channel channel) {
         if (null == channel) {

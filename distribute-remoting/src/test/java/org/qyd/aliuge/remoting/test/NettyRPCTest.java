@@ -25,7 +25,7 @@ import io.github.liuzm.distribute.remoting.netty.NettyRemotingServer;
 import io.github.liuzm.distribute.remoting.netty.ServerConfig;
 import io.github.liuzm.distribute.remoting.protocol.Command;
 import io.github.liuzm.distribute.remoting.protocol.HeaderMessageCode;
-import io.github.liuzm.distribute.remoting.protocol.header.SSSDComandHeader;
+import io.github.liuzm.distribute.remoting.protocol.header.SSSDComand;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 
@@ -77,7 +77,7 @@ public class NettyRPCTest {
         RemotingClient client = createRemotingClient();
         client.start();
         for (int i = 0; i < 10; i++) {
-            SSSDComandHeader requestHeader = new SSSDComandHeader(zkClient.getRandomClientNodeId());
+            SSSDComand requestHeader = new SSSDComand(zkClient.getRandomClientNodeId());
             requestHeader.setSssd(101);
             Command request = Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND, requestHeader);
             
@@ -100,7 +100,7 @@ public class NettyRPCTest {
         RemotingClient client = createRemotingClient();
         
         for (int i = 0; i < 10; i++) {
-            SSSDComandHeader requestHeader = new SSSDComandHeader(zkClient.getRandomClientNodeId());
+            SSSDComand requestHeader = new SSSDComand(zkClient.getRandomClientNodeId());
             requestHeader.setSssd(101);
             Command request = Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND, requestHeader);
             
@@ -126,7 +126,7 @@ public class NettyRPCTest {
         RemotingClient client = createRemotingClient();
         
         for (int i = 0; i < 1; i++) {
-            SSSDComandHeader requestHeader = new SSSDComandHeader(zkClient.getRandomClientNodeId());
+            SSSDComand requestHeader = new SSSDComand(zkClient.getRandomClientNodeId());
             requestHeader.setSssd(101);
             Command request = Command.createResponseCommand(HeaderMessageCode.ACK_COMMAND, "服务端答复请求");
             
