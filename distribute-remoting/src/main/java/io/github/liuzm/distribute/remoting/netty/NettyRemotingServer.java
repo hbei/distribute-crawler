@@ -30,10 +30,10 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -93,9 +93,12 @@ public class NettyRemotingServer extends AbstractRemoting implements RemotingSer
 				.childHandler(new ChannelInitializer<SocketChannel>() {
 					@Override
 					public void initChannel(SocketChannel ch) throws Exception {
-						ch.pipeline().addLast(defaultEventExecutorGroup, new NettyEncoder(), new NettyDecoder(),
+						ch.pipeline().addLast(defaultEventExecutorGroup, 
+								new NettyEncoder(), 
+								new NettyDecoder(),
 								new IdleStateHandler(0, 0, nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),
-								new NettyConnetManageHandler(), new ServerHandler());
+								new NettyConnetManageHandler(), 
+								new ServerHandler());
 					}
 				});
 
@@ -174,26 +177,13 @@ public class NettyRemotingServer extends AbstractRemoting implements RemotingSer
 		});
 	}
 
-	public class ServerHandler extends ChannelInboundHandlerAdapter {
+	public class ServerHandler extends SimpleChannelInboundHandler<Command> {
 
 		@Override
-		public void channelRead(ChannelHandlerContext ctx, Object request) throws Exception {
-			if (request instanceof Command) {
-				Command c = (Command) request;
-				processMessageReceived(ctx, c);
-			}
+		public void channelRead0(ChannelHandlerContext ctx, Command request) throws Exception {
+				processMessageReceived(ctx, request);
 		}
 
-		@Override
-		public void channelReadComplete(ChannelHandlerContext ctx) {
-			ctx.flush();
-		}
-
-		@Override
-		public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-			logger.warn("Unexpected exception from downstream.", cause);
-			ctx.close();
-		}
 	}
 
 	class NettyConnetManageHandler extends ChannelDuplexHandler {

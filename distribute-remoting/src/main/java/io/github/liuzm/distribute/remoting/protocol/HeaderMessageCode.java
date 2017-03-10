@@ -2,6 +2,8 @@ package io.github.liuzm.distribute.remoting.protocol;
 
 public class HeaderMessageCode {
 	
+	public static final int BLANK_COMMAND = -1;
+	
 	public static final int SYSTEM_ERROR = 0; // 系统错误
 	
 	public static final int ACK_COMMAND = 1; // 心跳消息,服务端每隔3000ms向客户端发送心跳,超时则

@@ -86,8 +86,6 @@ public abstract class AbstractRemoting {
 							response.setOpaque(cmd.getOpaque());
                             response.markResponseType();
 							ctx.writeAndFlush(response);
-						}else{
-							logger.info("client request dealed already !");
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -98,7 +96,8 @@ public abstract class AbstractRemoting {
 				}
 			};
 			try {
-				pair.getObject2().submit(run);
+				final RequestTask requestTask = new RequestTask(run, ctx.channel(), cmd);
+                pair.getObject2().submit(requestTask);
 				
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -184,14 +183,14 @@ public abstract class AbstractRemoting {
 		final Command cmd = msg;
 		if (cmd != null) {
 			switch (cmd.getType()) {
-			case REQUEST_COMMAND:
-				processRequestCommand(ctx, cmd);
-				break;
-			case RESPONSE_COMMAND:
-				processResponseCommand(ctx, cmd);
-				break;
-			default:
-				break;
+				case REQUEST_COMMAND:
+					processRequestCommand(ctx, cmd);
+					break;
+				case RESPONSE_COMMAND:
+					processResponseCommand(ctx, cmd);
+					break;
+				default:
+					break;
 			}
 		}
 	}

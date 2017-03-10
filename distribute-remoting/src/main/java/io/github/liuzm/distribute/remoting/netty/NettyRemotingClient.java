@@ -42,11 +42,11 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -68,7 +68,7 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 	private final ExecutorService publicExecutor;
 
 	public NettyRemotingClient(final ClientConfig nettyClientConfig) {
-		super(1,null);
+		super(1, null);
 		this.nettyClientConfig = nettyClientConfig;
 		this.eventLoopGroupWorker = new NioEventLoopGroup();
 
@@ -91,18 +91,23 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 				.handler(new ChannelInitializer<SocketChannel>() {
 					@Override
 					public void initChannel(SocketChannel ch) throws Exception {
-						ch.pipeline().addLast(new NettyEncoder(), new NettyDecoder(),
+						ch.pipeline().addLast(
+								new NettyEncoder(), 
+								new NettyDecoder(),
 								new IdleStateHandler(0, 0, nettyClientConfig.getClientChannelMaxIdleTimeSeconds()), //
-								new ClientHandler(), new NettyConnetManageHandler());
+								new NettyConnetManageHandler(), 
+								new ClientHandler());
 					}
 				});
 		// 从zookeeper上获取server的建立连接;目前默认是从服务端第一个节点建立链接
-		if(ZKUtil.exists(Config.ZKPath.REGISTER_SERVER_PATH)){
+		if (ZKUtil.exists(Config.ZKPath.REGISTER_SERVER_PATH)) {
 			List<String> servers;
 			try {
 				servers = ZKUtil.getChildren(Config.ZKPath.REGISTER_SERVER_PATH);
-				if(servers != null && servers.size() > 0){
-					Node node = (Node) JSONObject.parseObject((ZKUtil.getPathData(Config.ZKPath.REGISTER_SERVER_PATH+"/"+servers.get(0))), Node.class);
+				if (servers != null && servers.size() > 0) {
+					Node node = (Node) JSONObject.parseObject(
+							(ZKUtil.getPathData(Config.ZKPath.REGISTER_SERVER_PATH + "/" + servers.get(0))),
+							Node.class);
 					ChannelFuture future = b.connect(new InetSocketAddress(node.getIpaddress(), node.getPort())).sync();
 					// 建立链接完成后
 					ChannelManager.put(getRegistryNode().getNode().getId(), future.channel());
@@ -110,7 +115,7 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
+
 		}
 	}
 
@@ -128,34 +133,11 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 		return this.publicExecutor;
 	}
 
-	class ClientHandler extends ChannelInboundHandlerAdapter {
+	class ClientHandler extends SimpleChannelInboundHandler<Command> {
 
 		@Override
-		public void channelActive(ChannelHandlerContext ctx) throws Exception {
-			
-			ChannelManager.put(getRegistryNode().getNode().getId(), ctx.channel());
-			
-			Command cmd = Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND,
-					new AckCommand(registryNode.getNode().getId(), HeaderMessageCode.ACK_COMMAND_CONNECT));
-			ctx.writeAndFlush(cmd);
-		}
-
-		@Override
-		public void channelRead(ChannelHandlerContext ctx, Object request) throws Exception {
-			if (request instanceof Command) {
-				Command c = (Command) request;
-				processMessageReceived(ctx, c);
-			}
-		}
-
-		@Override
-		public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-			
-			ChannelManager.disConnect(registryNode.getNode().getId());
-			
-			Command cmd = Command.createRequestCommand(HeaderMessageCode.ACK_COMMAND,
-					new AckCommand(registryNode.getNode().getId(), HeaderMessageCode.ACK_COMMAND_DISCONNECT));
-			ctx.writeAndFlush(cmd);
+		public void channelRead0(ChannelHandlerContext ctx, Command request) throws Exception {
+				processMessageReceived(ctx, request);
 		}
 	}
 
@@ -167,7 +149,6 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 			final String local = localAddress == null ? "UNKNOW" : localAddress.toString();
 			final String remote = remoteAddress == null ? "UNKNOW" : remoteAddress.toString();
 			logger.info("NETTY CLIENT PIPELINE: CONNECT  {} => {}", local, remote);
-			ChannelManager.put(getRegistryNode().getNode().getId(), ctx.channel());
 			super.connect(ctx, remoteAddress, localAddress, promise);
 		}
 
@@ -260,9 +241,9 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 	public RegistryNodeFactory getRegisterNodeFactory() {
 		return new DefaultRegistryNodeFactory();
 	}
-	
+
 	@Override
-	public RegistryNode getRegistryNode(){
+	public RegistryNode getRegistryNode() {
 		return registryNode;
 	}
 }

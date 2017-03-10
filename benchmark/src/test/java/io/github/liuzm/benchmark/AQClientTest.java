@@ -4,15 +4,16 @@ import io.github.liuzm.distribute.client.AQClient;
 import io.github.liuzm.distribute.remoting.exception.RemotingConnectException;
 import io.github.liuzm.distribute.remoting.exception.RemotingSendRequestException;
 import io.github.liuzm.distribute.remoting.exception.RemotingTimeoutException;
+import io.github.liuzm.distribute.remoting.exception.RemotingTooMuchRequestException;
 
 public class AQClientTest {
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws RemotingTooMuchRequestException {
 		final AQClient client = new AQClient();
 		client.start();
 		
 		try {
-			client.sendMessage();
+			client.send();
 		} catch (RemotingConnectException e) {
 			e.printStackTrace();
 		} catch (RemotingSendRequestException e) {
