@@ -3,12 +3,7 @@
  */
 package io.github.liuzm.distribute.client;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-
 import org.apache.log4j.Logger;
-import org.apache.log4j.chainsaw.Main;
 
 import io.github.liuzm.distribute.remoting.InvokeCallback;
 import io.github.liuzm.distribute.remoting.RemotingClient;
@@ -69,8 +64,9 @@ public class AQClient{
         for(int i = 0 ;i< 10000;i++){
         	requestHeader = new MessageCommand(remotingClient.getRegistryNode().getNode().getId());
         	requestHeader.setBody((s+i).getBytes());
+        	logger.info("发送:"+i);
         	request = Command.createRequestCommand(HeaderMessageCode.MESSAGE_COMMAND, requestHeader);
-			remotingClient.invokeSync(remotingClient.getRegistryNode().getNode().getId(), request, 3000);
+			Command result = remotingClient.invokeSync(remotingClient.getRegistryNode().getNode().getId(), request, 3000);
 		}
 	}
 	

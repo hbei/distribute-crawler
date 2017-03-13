@@ -53,11 +53,7 @@ public class Test {
 		
 		thread1.run();
 		
-		try {
-			
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		thread2.start();
 		
 	}
 }
