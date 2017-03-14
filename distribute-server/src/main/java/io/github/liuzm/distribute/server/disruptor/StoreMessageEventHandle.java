@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import com.lmax.disruptor.EventHandler;
 
-import io.github.liuzm.distribute.remoting.protocol.Command;
-
 public class StoreMessageEventHandle implements EventHandler<MessageHolder>{
 	
 	private static final Logger logger = LoggerFactory.getLogger(StoreMessageEventHandle.class);
@@ -27,10 +25,8 @@ public class StoreMessageEventHandle implements EventHandler<MessageHolder>{
 			messageList.add(event.get());
 			if(endOfBatch || messageList.size() == bufferSize){
 				try{
-					System.out.println(messageList.size());
 					for(Message m : messageList ){
-						System.out.println(m.getNodeId());
-						System.out.println(new String(m.getMessageBody()));
+						logger.info("接收到来自NODEID为："+m.getNodeId()+" 的数据:"+new String(m.getMessageBody()));
 					}
 				}catch(Exception e){
 					logger.error("刷盘储存异常,s%",e);

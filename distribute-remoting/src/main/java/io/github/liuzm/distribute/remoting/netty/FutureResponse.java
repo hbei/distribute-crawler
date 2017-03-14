@@ -25,11 +25,8 @@ public class FutureResponse implements Serializable {
 	 */
 	private static final long serialVersionUID = 2562450290280989622L;
 
-	private volatile Command responseCommand;
-	private volatile boolean sendRequestOK = true;
+	
 	private final long beginTimestamp = System.currentTimeMillis();
-	private volatile Throwable cause;
-
 	private final InvokeCallback invokeCallback;
 	private final long timeoutMillis;
 	private final int opaque;
@@ -37,9 +34,13 @@ public class FutureResponse implements Serializable {
 	private final SemaphoreReleaseOnlyOnce once;
 	// 保证回调的callback方法至多至少只被执行一次
 	private final AtomicBoolean executeCallbackOnlyOnce = new AtomicBoolean(false);
-
 	private final CountDownLatch countDownLatch = new CountDownLatch(1);
-
+	
+	private volatile Throwable cause;
+	private volatile Command responseCommand;
+	private volatile boolean sendRequestOK = true;
+	
+	
 	public FutureResponse(int opaque, long timeoutMillis, InvokeCallback invokeCallback,
 			SemaphoreReleaseOnlyOnce once) {
 		this.opaque = opaque;

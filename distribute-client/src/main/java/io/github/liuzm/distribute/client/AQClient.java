@@ -3,7 +3,8 @@
  */
 package io.github.liuzm.distribute.client;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.github.liuzm.distribute.remoting.InvokeCallback;
 import io.github.liuzm.distribute.remoting.RemotingClient;
@@ -25,7 +26,7 @@ import io.github.liuzm.distribute.remoting.protocol.header.MessageCommand;
  */
 public class AQClient{
 	
-	private static final Logger logger = Logger.getLogger(AQClient.class);
+	private static final Logger logger = LoggerFactory.getLogger(AQClient.class);
 	
 	private final RemotingClient remotingClient;
 	
@@ -45,12 +46,16 @@ public class AQClient{
 	}
 	
 	public void send() throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException, RemotingTooMuchRequestException{
-		BlankCommand requestHeader = new BlankCommand(remotingClient.getRegistryNode().getNode().getId());
+		BlankCommand requestHeader ;
+		Command request ;
+		String id = remotingClient.getRegistryNode().getNode().getId();
 		while(true){
-			Command request = Command.createRequestCommand(HeaderMessageCode.BLANK_COMMAND, requestHeader);
-			remotingClient.invokeAsync(remotingClient.getRegistryNode().getNode().getId(), request, 3000,new InvokeCallback() {
+			requestHeader = new BlankCommand(id);
+			request = Command.createRequestCommand(HeaderMessageCode.BLANK_COMMAND, requestHeader);
+			remotingClient.invokeAsync(id, request, 1000,new InvokeCallback() {
 				@Override
 				public void doComplete(FutureResponse responseFuture) {
+					logger.info("result:"+responseFuture.getResponseCommand().getOpaque());
 					logger.info("do nothing!");
 				}
 			});
@@ -61,12 +66,13 @@ public class AQClient{
 		MessageCommand requestHeader;
 		Command request ;
         String s = "i am OK ";
+        String id = remotingClient.getRegistryNode().getNode().getId();
         for(int i = 0 ;i< 10000;i++){
-        	requestHeader = new MessageCommand(remotingClient.getRegistryNode().getNode().getId());
+        	requestHeader = new MessageCommand(id);
         	requestHeader.setBody((s+i).getBytes());
-        	logger.info("发送:"+i);
         	request = Command.createRequestCommand(HeaderMessageCode.MESSAGE_COMMAND, requestHeader);
-			Command result = remotingClient.invokeSync(remotingClient.getRegistryNode().getNode().getId(), request, 3000);
+			Command result = remotingClient.invokeSync(id, request, 1000);
+			logger.info("result:"+result);
 		}
 	}
 	

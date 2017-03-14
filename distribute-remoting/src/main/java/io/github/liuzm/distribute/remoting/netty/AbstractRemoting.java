@@ -1,9 +1,14 @@
 package io.github.liuzm.distribute.remoting.netty;
 
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,16 +43,11 @@ public abstract class AbstractRemoting {
 			256);
 	protected final HashMap<Integer, Pair<Processor, ExecutorService>> processorTable = new HashMap<Integer, Pair<Processor, ExecutorService>>(
 			64);
-	/**
-	 * 默认的命令处理器
-	 */
 	protected Pair<Processor, ExecutorService> defaultProcessor;
 	protected ExecutorService defaultExecutor;
-	// 信号量，异步调用情况会使用，防止本地Netty缓存请求过多
-    protected final Semaphore semaphoreAsync = new Semaphore(2, true);
+    protected final Semaphore semaphoreAsync = new Semaphore(1, true);
     
     protected int nodeType = 0;
-    
     protected  RegistryNode registryNode;
     
     abstract public RegistryNodeFactory getRegisterNodeFactory();
@@ -229,43 +229,106 @@ public abstract class AbstractRemoting {
 
 	/**
 	 * 异步发送，不需要立即返回
+	 * @throws InterruptedException 
 	 */
 	public void invokeAsyncImpl(final Channel channel, final Command request, final long timeoutMillis,
-			final InvokeCallback invokeCallback) {
+			final InvokeCallback invokeCallback) throws InterruptedException {
 		
-		final SemaphoreReleaseOnlyOnce once = new SemaphoreReleaseOnlyOnce(this.semaphoreAsync);
-		final FutureResponse responseFuture = new FutureResponse(request.getOpaque(), timeoutMillis, invokeCallback,
-				once);
-		this.responseTable.put(request.getOpaque(), responseFuture);
-		try {
-			channel.writeAndFlush(request).addListener(new ChannelFutureListener() {
-				@Override
-				public void operationComplete(ChannelFuture f) throws Exception {
-					if (f.isSuccess()) {
-						responseFuture.setSendRequestOK(true);
-						return;
-					} else {
-						responseFuture.setSendRequestOK(false);
+		boolean acquired = this.semaphoreAsync.tryAcquire(timeoutMillis, TimeUnit.MILLISECONDS);
+		final int opaque = request.getOpaque();
+		
+		if(acquired){
+			final SemaphoreReleaseOnlyOnce once = new SemaphoreReleaseOnlyOnce(this.semaphoreAsync);
+			final FutureResponse responseFuture = new FutureResponse(opaque, timeoutMillis, invokeCallback,once);
+			this.responseTable.put(request.getOpaque(), responseFuture);
+			try {
+				channel.writeAndFlush(request).addListener(new ChannelFutureListener() {
+					@Override
+					public void operationComplete(ChannelFuture f) throws Exception {
+						if (f.isSuccess()) {
+							responseFuture.setSendRequestOK(true);
+							return;
+						} else {
+							responseFuture.setSendRequestOK(false);
+						}
+	
+						responseFuture.putResponse(null);
+						responseTable.remove(request.getOpaque());
+						try {
+							responseFuture.executeInvokeCallback();
+						} catch (Throwable e) {
+							logger.warn("excute callback in writeAndFlush addListener, and callback throw", e);
+						} finally {
+							responseFuture.release();
+						}
+	
+						logger.warn("send a request command to channel <{}> failed.", channel);
 					}
-
-					responseFuture.putResponse(null);
-					responseTable.remove(request.getOpaque());
-					try {
-						responseFuture.executeInvokeCallback();
-					} catch (Throwable e) {
-						logger.warn("excute callback in writeAndFlush addListener, and callback throw", e);
-					} finally {
-						responseFuture.release();
-					}
-
-					logger.warn(request.toString());
-				}
-			});
-		} catch (Exception e) {
-			responseFuture.release();
+				});
+			} catch (Exception e) {
+				responseFuture.release();
+			}
 		}
 	}
 	
+	public void scanResponseTable() {
+        final List<FutureResponse> rfList = new LinkedList<FutureResponse>();
+        Iterator<Entry<Integer, FutureResponse>> it = this.responseTable.entrySet().iterator();
+        while (it.hasNext()) {
+            Entry<Integer, FutureResponse> next = it.next();
+            FutureResponse rep = next.getValue();
+
+            if ((rep.getBeginTimestamp() + rep.getTimeoutMillis() + 1000) <= System.currentTimeMillis()) {
+                rep.release();
+                it.remove();
+                rfList.add(rep);
+                logger.warn("remove timeout request, " + rep);
+            }
+        }
+
+        for (FutureResponse rf : rfList) {
+            try {
+                executeInvokeCallback(rf);
+            } catch (Throwable e) {
+            	logger.warn("scanResponseTable, operationComplete Exception", e);
+            }
+        }
+    }
+	
+	
+	private void executeInvokeCallback(final FutureResponse responseFuture) {
+        boolean runInThisThread = false;
+        ExecutorService executor = this.getCallbackExecutor();
+        if (executor != null) {
+            try {
+                executor.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            responseFuture.executeInvokeCallback();
+                        } catch (Throwable e) {
+                            logger.warn("execute callback in executor exception, and callback throw", e);
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                runInThisThread = true;
+                logger.warn("execute callback in executor exception, maybe executor busy", e);
+            }
+        } else {
+            runInThisThread = true;
+        }
+
+        if (runInThisThread) {
+            try {
+                responseFuture.executeInvokeCallback();
+            } catch (Throwable e) {
+            	logger.warn("executeInvokeCallback Exception", e);
+            }
+        }
+    }
+	
+	 abstract public ExecutorService getCallbackExecutor();
 	
 
 }

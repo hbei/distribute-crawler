@@ -6,6 +6,8 @@ package io.github.liuzm.distribute.remoting.netty;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -66,6 +68,7 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 	private final Bootstrap bootstrap = new Bootstrap();
 	private final EventLoopGroup eventLoopGroupWorker;
 	private final ExecutorService publicExecutor;
+	private final Timer timer = new Timer("ClientHouseKeepingService", true);
 
 	public NettyRemotingClient(final ClientConfig nettyClientConfig) {
 		super(1, null);
@@ -115,8 +118,19 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
 		}
+		
+		// 扫描response响应
+		this.timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    NettyRemotingClient.this.scanResponseTable();
+                } catch (Exception e) {
+                    logger.error("scanResponseTable exception", e);
+                }
+            }
+        }, 1000 * 3, 1000);
 	}
 
 	@Override
@@ -246,4 +260,9 @@ public class NettyRemotingClient extends AbstractRemoting implements RemotingCli
 	public RegistryNode getRegistryNode() {
 		return registryNode;
 	}
+	
+	@Override
+    public ExecutorService getCallbackExecutor() {
+        return this.publicExecutor;
+    }
 }

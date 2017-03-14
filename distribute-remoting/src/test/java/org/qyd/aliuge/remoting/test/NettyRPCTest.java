@@ -70,7 +70,7 @@ public class NettyRPCTest {
     
     private static final ZkClient zkClient = ZkClient.getClient(Config.ZKPath.CONNECT_STR);
     
-    @Test
+   // @Test
     public void test_RPC_Sync() throws InterruptedException, RemotingConnectException,
             RemotingSendRequestException, RemotingTimeoutException {
     	RemotingServer server = createRemotingServer();
@@ -93,12 +93,12 @@ public class NettyRPCTest {
         
     }
     
-   // @Test
+    @Test
     public void test_RPC_Async() throws InterruptedException, RemotingConnectException,
             RemotingSendRequestException, RemotingTimeoutException, RemotingException {
     	RemotingServer server = createRemotingServer();
         RemotingClient client = createRemotingClient();
-        
+        client.start();
         for (int i = 0; i < 10; i++) {
             SSSDComand requestHeader = new SSSDComand(zkClient.getRandomClientNodeId());
             requestHeader.setSssd(101);
@@ -107,7 +107,7 @@ public class NettyRPCTest {
             final Channel channel = ChannelManager.get(client.getRegistryNode().getNode().getId());
             System.out.println("channel >> "+channel);
             // tcp是双工的，应该可以写数据给client端
-            client.invokeAsync(zkClient.getRandomClientNodeId(),request, 3000,new InvokeCallback() {
+            client.invokeAsync(zkClient.getRandomClientNodeId(),request, 4000,new InvokeCallback() {
 				@Override
 				public void doComplete(FutureResponse responseFuture) {
 					

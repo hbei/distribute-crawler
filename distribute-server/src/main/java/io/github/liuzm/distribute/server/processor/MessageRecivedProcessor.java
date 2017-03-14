@@ -27,7 +27,8 @@ public class MessageRecivedProcessor implements Processor {
 	private Disruptor<MessageHolder> messagenDisruptor;
 	private Message s;
     
-    public MessageRecivedProcessor(){
+    @SuppressWarnings("unchecked")
+	public MessageRecivedProcessor(){
     	messagenDisruptor = new Disruptor<MessageHolder>(new MessageEventFactory(),
                 1024,
                 new NamedThreadFactory("Storage-writer"),
@@ -56,7 +57,7 @@ public class MessageRecivedProcessor implements Processor {
     		}
     		
     	}
-        return null;
+        return Command.createResponseCommand(HeaderMessageCode.CONSUMER_SEND_MSG_BACK, "i am a client I have recived your message !!!");
     }
 
 

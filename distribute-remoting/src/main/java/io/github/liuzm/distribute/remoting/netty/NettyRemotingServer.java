@@ -1,7 +1,8 @@
 package io.github.liuzm.distribute.remoting.netty;
 
 import java.net.InetSocketAddress;
-import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -54,6 +55,7 @@ public class NettyRemotingServer extends AbstractRemoting implements RemotingSer
 	// 处理Callback应答器
 	private final ExecutorService publicExecutor;
 	private int port = 0;
+	private final Timer timer = new Timer("ServerHouseKeepingService", true);
 
 	public NettyRemotingServer(final ServerConfig nettyServerConfig) {
 		super(0,nettyServerConfig);
@@ -106,12 +108,23 @@ public class NettyRemotingServer extends AbstractRemoting implements RemotingSer
 			ChannelFuture sync = this.serverBootstrap.bind().sync();
 			InetSocketAddress addr = (InetSocketAddress) sync.channel().localAddress();
 			this.port = addr.getPort();
-			logger.info("Server started " + new Date() + "listen ip " + addr + " listen port "
+			logger.info("Server started! "+ "listen ip: " + addr + "  listen port: "
 					+ this.bindLocalListenerPort());
 		} catch (InterruptedException e1) {
 			throw new RuntimeException("this.serverBootstrap.bind().sync() InterruptedException", e1);
 		}
+		
+		this.timer.scheduleAtFixedRate(new TimerTask() {
 
+            @Override
+            public void run() {
+                try {
+                    NettyRemotingServer.this.scanResponseTable();
+                } catch (Exception e) {
+                    logger.error("scanResponseTable exception", e);
+                }
+            }
+        }, 1000 * 3, 1000);
 	}
 
 	@Override
@@ -281,5 +294,10 @@ public class NettyRemotingServer extends AbstractRemoting implements RemotingSer
 	@Override
 	public RegistryNode getRegistryNode(){
 		return registryNode;
+	}
+
+	@Override
+	public ExecutorService getCallbackExecutor() {
+		return this.publicExecutor;
 	}
 }
