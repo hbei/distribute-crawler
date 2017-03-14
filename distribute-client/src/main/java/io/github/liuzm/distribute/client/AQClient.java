@@ -6,6 +6,7 @@ package io.github.liuzm.distribute.client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.github.liuzm.distribute.remoting.Context;
 import io.github.liuzm.distribute.remoting.InvokeCallback;
 import io.github.liuzm.distribute.remoting.RemotingClient;
 import io.github.liuzm.distribute.remoting.exception.RemotingConnectException;
@@ -30,14 +31,14 @@ public class AQClient{
 	
 	private final RemotingClient remotingClient;
 	
-	
+	private final Context context = new Context();
 	
 	
 	
 	public AQClient(){
 		ClientConfig config = new ClientConfig();
 		NettyRemotingClient nettyClient = new NettyRemotingClient(config);
-		AQClientInitializer.buildClient(nettyClient);
+		AQClientInitializer.buildClient(nettyClient,context);
 		this.remotingClient = nettyClient;
 	}
 	

@@ -6,7 +6,7 @@ package io.github.liuzm.distribute.client.processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.liuzm.distribute.client.AQClient;
+import io.github.liuzm.distribute.remoting.Processor;
 import io.github.liuzm.distribute.remoting.protocol.Command;
 import io.github.liuzm.distribute.remoting.protocol.HeaderMessageCode;
 import io.netty.channel.ChannelHandlerContext;
@@ -17,7 +17,7 @@ import io.netty.channel.ChannelHandlerContext;
  * @author xh-liuzhimin
  *
  */
-public class ClientCtlProcessor extends AbstractSendMessageProcessor {
+public class ClientCtlProcessor implements Processor {
 
 	private static final Logger logger = LoggerFactory.getLogger(ClientCtlProcessor.class);
 

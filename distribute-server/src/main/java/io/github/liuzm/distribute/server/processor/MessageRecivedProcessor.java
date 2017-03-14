@@ -21,7 +21,7 @@ import io.netty.channel.ChannelHandlerContext;
 /**
  * Created by xh-liuzhimin on 2017/2/8.
  */
-public class MessageRecivedProcessor implements Processor {
+public class MessageRecivedProcessor implements Processor	 {
 	
 	private MessageEventProducer producer;
 	private Disruptor<MessageHolder> messagenDisruptor;
